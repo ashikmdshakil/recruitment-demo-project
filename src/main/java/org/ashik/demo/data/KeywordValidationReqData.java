@@ -10,8 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class KeywordValidationReqData {
+    private String transactionId;
     private String keyword;
     private String msisdn;
     private String operator;
     private String shortCode;
+    private String gameName;
 }

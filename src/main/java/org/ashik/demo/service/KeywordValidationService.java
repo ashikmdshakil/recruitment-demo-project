@@ -19,8 +19,9 @@ public class KeywordValidationService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public boolean validateKeyword(String keyword, String msisdn, String operator, String shortCode) {
-        String url = "http://your-api-endpoint/validate-keyword";
+    public boolean validateKeyword(String transactionId, String keyword, String msisdn, String operator,
+                                   String shortCode, String gameName) {
+        String url = "http://demo.webmanza.com/a55dbz923ace647v/api/v1.0/services/unlockCode";
 
         if (keyword == null || keyword.isEmpty()) {
             return false;
@@ -31,7 +32,7 @@ public class KeywordValidationService {
             return false;
         }
 
-        KeywordValidationReqData request = new KeywordValidationReqData(keyword, msisdn, operator, shortCode);
+        KeywordValidationReqData request = new KeywordValidationReqData(transactionId, keyword, msisdn, operator, shortCode, gameName);
 
         try {
             // Set headers if needed

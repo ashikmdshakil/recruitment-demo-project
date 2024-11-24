@@ -39,12 +39,13 @@ public class ContentService {
                 // Save entities to the database
                 inboxRepository.saveAll(inboxEntries);
 
-
                 inboxEntries.forEach(inbox -> {
                     try {
                         // Step 1: Validate the keyword
-                        boolean isKeywordValid = keywordValidationService.validateKeyword(
-                                inbox.getKeyword(), inbox.getMsisdn(), inbox.getOperator(), inbox.getShortCode());
+                        boolean isKeywordValid = keywordValidationService.validateKeyword(inbox.getTransactionId(),
+                                inbox.getKeyword(), inbox.getMsisdn(), inbox.getOperator(), inbox.getShortCode(),
+                                inbox.getGameName()
+                        );
 
                         if (!isKeywordValid) {
                             updateInboxStatus(inbox, "F"); // Invalid keyword, set status to 'F'
@@ -83,6 +84,7 @@ public class ContentService {
             inbox.setMsisdn(content.getMsisdn());
             inbox.setSms(content.getSms());
             inbox.setStatus("N"); // Initial status as 'N'
+            extractKeywordAndGameName(content.getSms(), inbox);
             return inbox;
         }).toList();
     }
@@ -90,5 +92,17 @@ public class ContentService {
     private void updateInboxStatus(Inbox inbox, String status) {
         inbox.setStatus(status);
         inboxRepository.save(inbox);
+    }
+
+    private void extractKeywordAndGameName(String sms, Inbox inbox) {
+        if (sms != null && !sms.isEmpty()) {
+            String[] parts = sms.split(" ", 3); // Split SMS into at most 3 parts
+            if (parts.length > 0) {
+                inbox.setKeyword(parts[0]); // First part is the keyword
+            }
+            if (parts.length > 1) {
+                inbox.setGameName(parts[1]); // Second part is the game name
+            }
+        }
     }
 }
