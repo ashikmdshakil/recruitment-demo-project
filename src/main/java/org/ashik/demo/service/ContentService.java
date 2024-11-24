@@ -18,6 +18,12 @@ public class ContentService {
     @Autowired
     private InboxRepository inboxRepository;
 
+    @Autowired
+    private KeywordValidationService keywordValidationService;
+
+    @Autowired
+    private ChargingService chargingService;
+
     @PostConstruct
     public void fetchAndSaveContents() {
         String url = "http://demo.webmanza.com/a55dbz923ace647v/api/v1.0/services/content";
@@ -32,6 +38,26 @@ public class ContentService {
 
                 // Save entities to the database
                 inboxRepository.saveAll(inboxEntries);
+
+
+                inboxEntries.forEach(inbox -> {
+                    try {
+                        // Step 1: Validate the keyword
+                        boolean isKeywordValid = keywordValidationService.validateKeyword(
+                                inbox.getKeyword(), inbox.getMsisdn(), inbox.getOperator(), inbox.getShortCode());
+
+                        if (!isKeywordValid) {
+                            updateInboxStatus(inbox, "F"); // Invalid keyword, set status to 'F'
+                        }
+
+                        // Step 2: Process charging
+                        chargingService.processCharging(inbox.getId());
+                    } catch (Exception e) {
+                        // Log the error and mark the inbox entry as failed
+                        System.err.println("Error processing inbox entry ID " + inbox.getId() + ": " + e.getMessage());
+                        updateInboxStatus(inbox, "F");
+                    }
+                });
 
                 System.out.println("Contents saved to the database successfully.");
             }
@@ -59,5 +85,10 @@ public class ContentService {
             inbox.setStatus("N"); // Initial status as 'N'
             return inbox;
         }).toList();
+    }
+
+    private void updateInboxStatus(Inbox inbox, String status) {
+        inbox.setStatus(status);
+        inboxRepository.save(inbox);
     }
 }

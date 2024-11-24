@@ -2,6 +2,8 @@ package org.ashik.demo.service;
 
 import org.ashik.demo.data.KeywordValidationReqData;
 import org.ashik.demo.data.KeywordValidationResData;
+import org.ashik.demo.repository.KeywordDetailsRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -12,10 +14,22 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class KeywordValidationService {
 
+    @Autowired
+    private KeywordDetailsRepository keywordDetailsRepository;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public boolean validateKeyword(String keyword, String msisdn, String operator, String shortCode) {
         String url = "http://your-api-endpoint/validate-keyword";
+
+        if (keyword == null || keyword.isEmpty()) {
+            return false;
+        }
+
+        // Check if keyword exists in the database
+        if (!keywordDetailsRepository.existsByKeyword(keyword)) {
+            return false;
+        }
 
         KeywordValidationReqData request = new KeywordValidationReqData(keyword, msisdn, operator, shortCode);
 
