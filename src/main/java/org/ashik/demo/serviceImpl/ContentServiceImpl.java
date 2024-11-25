@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Service
@@ -32,6 +33,8 @@ public class ContentServiceImpl implements ContentService {
 
     @Autowired
     private ChargingService chargingService;
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(50);
 
     @Override
     @PostConstruct
@@ -70,7 +73,9 @@ public class ContentServiceImpl implements ContentService {
             if (!isKeywordValid) {
                 updateInboxStatus(inbox, "F"); // set content status to 'F' for failure
             } else {
-                chargingService.performCharging(inbox.getId());
+                executorService.submit(() -> {
+                    chargingService.performCharging(inbox.getId());
+                });
             }
         } catch (Exception e) {
             System.err.println("ERROR PROCESSING INBOX ENTRY ID " + inbox.getId() + ": " + e.getMessage());
