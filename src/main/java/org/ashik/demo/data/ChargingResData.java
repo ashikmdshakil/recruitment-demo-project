@@ -10,7 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class ChargingResData {
-    private String status;
+    private int statusCode;
     private String message;
     private String transactionId;
+    private String operator;
+    private String shortCode;
+    private String msisdn;
+    private String chargeCode;
 }

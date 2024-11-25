@@ -10,8 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class ChargingReqData {
+    private String transactionId;
+    private String shortCode;
+    private String operator;
     private String msisdn;
     private String chargeCode;
-    private Double amount;
-    private String transactionId;
 }

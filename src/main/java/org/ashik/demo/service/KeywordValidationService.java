@@ -14,10 +14,9 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class KeywordValidationService {
 
+    private final RestTemplate restTemplate = new RestTemplate();
     @Autowired
     private KeywordDetailsRepository keywordDetailsRepository;
-
-    private final RestTemplate restTemplate = new RestTemplate();
 
     public boolean validateKeyword(String transactionId, String keyword, String msisdn, String operator,
                                    String shortCode, String gameName) {
@@ -26,13 +25,12 @@ public class KeywordValidationService {
         if (keyword == null || keyword.isEmpty()) {
             return false;
         }
-
-        // Check if keyword exists in the database
         if (!keywordDetailsRepository.existsByKeyword(keyword)) {
             return false;
         }
 
-        KeywordValidationReqData request = new KeywordValidationReqData(transactionId, keyword, msisdn, operator, shortCode, gameName);
+        KeywordValidationReqData request =
+                new KeywordValidationReqData(transactionId, keyword, msisdn, operator, shortCode, gameName);
 
         try {
             // Set headers if needed
@@ -47,7 +45,7 @@ public class KeywordValidationService {
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 KeywordValidationResData responseBody = response.getBody();
-                if (responseBody != null && responseBody.isValid()) {
+                if (responseBody != null && responseBody.getStatusCode() == 200) {
                     System.out.println("Validation successful: " + responseBody);
                     return true;
                 } else {

@@ -1,7 +1,7 @@
 package org.ashik.demo.service;
 
 import jakarta.annotation.PostConstruct;
-import org.ashik.demo.data.ContentResponseData;
+import org.ashik.demo.data.ContentResData;
 import org.ashik.demo.model.Inbox;
 import org.ashik.demo.repository.InboxRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class ContentService {
 
         try {
             // Fetch data from API
-            ContentResponseData responseData = fetchContents(url);
+            ContentResData responseData = fetchContents(url);
 
             if (responseData != null && responseData.getContents() != null) {
                 // Map response to Inbox entities
@@ -39,7 +39,7 @@ public class ContentService {
                 // Save entities to the database
                 inboxRepository.saveAll(inboxEntries);
 
-                inboxEntries.forEach(inbox -> {
+                inboxEntries.parallelStream().forEach(inbox -> {
                     try {
                         // Step 1: Validate the keyword
                         boolean isKeywordValid = keywordValidationService.validateKeyword(inbox.getTransactionId(),
@@ -49,14 +49,12 @@ public class ContentService {
 
                         if (!isKeywordValid) {
                             updateInboxStatus(inbox, "F"); // Invalid keyword, set status to 'F'
+                        } else {
+                            chargingService.processCharging(inbox.getId());
                         }
-
-                        // Step 2: Process charging
-                        chargingService.processCharging(inbox.getId());
                     } catch (Exception e) {
                         // Log the error and mark the inbox entry as failed
                         System.err.println("Error processing inbox entry ID " + inbox.getId() + ": " + e.getMessage());
-                        updateInboxStatus(inbox, "F");
                     }
                 });
 
@@ -67,15 +65,15 @@ public class ContentService {
         }
     }
 
-    private ContentResponseData fetchContents(String url) {
+    private ContentResData fetchContents(String url) {
         try {
-            return restTemplate.getForObject(url, ContentResponseData.class);
+            return restTemplate.getForObject(url, ContentResData.class);
         } catch (Exception e) {
             throw new RuntimeException("Exception while calling API: " + e.getMessage(), e);
         }
     }
 
-    private List<Inbox> mapContentsToInbox(ContentResponseData responseData) {
+    private List<Inbox> mapContentsToInbox(ContentResData responseData) {
         return responseData.getContents().stream().map(content -> {
             Inbox inbox = new Inbox();
             inbox.setTransactionId(content.getTransactionId());

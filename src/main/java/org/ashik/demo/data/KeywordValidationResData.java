@@ -10,8 +10,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class KeywordValidationResData {
-    private boolean valid;
+    private int statusCode;
     private String message;
-    private String keyword;
+    private String unlockCode;
+    private String transactionId;
+    private String operator;
+    private String shortCode;
     private String msisdn;
+    private String keyword;
+    private String gameName;
 }

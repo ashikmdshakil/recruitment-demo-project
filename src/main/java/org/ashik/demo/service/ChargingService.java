@@ -2,8 +2,14 @@ package org.ashik.demo.service;
 
 import org.ashik.demo.data.ChargingReqData;
 import org.ashik.demo.data.ChargingResData;
-import org.ashik.demo.model.*;
-import org.ashik.demo.repository.*;
+import org.ashik.demo.model.ChargeConfig;
+import org.ashik.demo.model.ChargeFailureLog;
+import org.ashik.demo.model.ChargeSuccessLog;
+import org.ashik.demo.model.Inbox;
+import org.ashik.demo.repository.ChargeConfigRepository;
+import org.ashik.demo.repository.ChargeFailureLogRepository;
+import org.ashik.demo.repository.ChargeSuccessLogRepository;
+import org.ashik.demo.repository.InboxRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,21 +21,16 @@ import java.util.Optional;
 @Service
 public class ChargingService {
 
+    private static final String CHARGE_URL = "http://demo.webmanza.com/a55dbz923ace647v/api/v1.0/services/charge";
+    private final RestTemplate restTemplate = new RestTemplate();
     @Autowired
     private InboxRepository inboxRepository;
-
     @Autowired
     private ChargeConfigRepository chargeConfigRepository;
-
     @Autowired
     private ChargeSuccessLogRepository chargeSuccessLogRepository;
-
     @Autowired
     private ChargeFailureLogRepository chargeFailureLogRepository;
-
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    private static final String CHARGE_URL = "http://demo.webmanza.com/a55dbz923ace647v/api/v1.0/services/charge";
 
     @Transactional
     public void processCharging(Integer inboxId) {
@@ -51,23 +52,24 @@ public class ChargingService {
                 .msisdn(inbox.getMsisdn())
                 .chargeCode(chargeConfig.getChargeCode())
                 .transactionId(inbox.getTransactionId())
-                .amount(10.0) // Assuming a default charge amount; replace as needed
+                .shortCode(inbox.getShortCode())
+                .operator(inbox.getOperator())
                 .build();
 
         try {
             // Call the charge API
             ChargingResData response = restTemplate.postForObject(CHARGE_URL, chargingRequest, ChargingResData.class);
 
-            if ("SUCCESS".equalsIgnoreCase(response.getStatus())) {
+            if (response != null && response.getStatusCode() == 200) {
                 updateInboxStatus(inbox, "S");
                 logSuccess(inbox);
             } else {
                 updateInboxStatus(inbox, "F");
-                logFailure(inbox, 500, response.getMessage());
+                logFailure(inbox, response.getStatusCode(), response.getMessage());
             }
         } catch (Exception e) {
             updateInboxStatus(inbox, "F");
-            logFailure(inbox, 503, "Error while charging: " + e.getMessage());
+            logFailure(inbox, 500, "Error while charging: " + e.getMessage());
         }
     }
 

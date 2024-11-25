@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Table(name = "charge_success_log")
 public class ChargeSuccessLog {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @Column(name = "sms_id")

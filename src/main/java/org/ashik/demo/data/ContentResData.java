@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ContentResponseData {
+public class ContentResData {
     private int statusCode;
     private String message;
     private int contentCount;
